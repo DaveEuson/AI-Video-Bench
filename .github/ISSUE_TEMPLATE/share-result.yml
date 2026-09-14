@@ -1,0 +1,44 @@
+name: Share a result
+description: Post your times, so everyone can see what each GPU can do.
+title: "Result: "
+labels: ["result"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing. Paste the file videobench wrote: `results/<run>.json` in your `--dir`.
+        A lineup writes one file per model; paste them all, one after another.
+
+        The file holds your hardware and times, and no computer name. Its `files` section can show
+        folder paths with your user name in them: delete that part if you like.
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU
+      placeholder: NVIDIA GeForce RTX 4070, 12 GB
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What you ran
+      options:
+        - The standard benchmark (fast)
+        - The standard benchmark (quality)
+        - The lineup (--models)
+        - Voices (--voices)
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: The result file(s)
+      description: "results/<run>.json from your --dir"
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Other apps running, a laptop on battery, an unusual driver. Drag the mp4 in here to show the clip.

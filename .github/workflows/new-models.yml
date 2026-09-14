@@ -1,0 +1,24 @@
+name: new models
+
+# Once a day: ComfyUI's template list against models.json, and every pinned file against
+# what Hugging Face serves now. Anything new or changed becomes an issue (once).
+on:
+  schedule:
+    - cron: "23 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - run: python tools/check_models.py --github
+        env:
+          GH_TOKEN: ${{ github.token }}

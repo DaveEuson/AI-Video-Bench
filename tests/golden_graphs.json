@@ -1,0 +1,10486 @@
+{
+ "clip_phases": {
+  "fast/lowmem": [
+   [
+    "clip_encode",
+    {
+     "cond": {
+      "class_type": "LTXVConditioning",
+      "inputs": {
+       "frame_rate": 24,
+       "negative": [
+        "i2v",
+        1
+       ],
+       "positive": [
+        "i2v",
+        0
+       ]
+      }
+     },
+     "i2v": {
+      "class_type": "LTXVImgToVideo",
+      "inputs": {
+       "batch_size": 1,
+       "height": 480,
+       "image": [
+        "img",
+        0
+       ],
+       "length": 121,
+       "negative": [
+        "neg",
+        0
+       ],
+       "positive": [
+        "pos",
+        0
+       ],
+       "strength": 1.0,
+       "vae": [
+        "vae",
+        0
+       ],
+       "width": 640
+      }
+     },
+     "img": {
+      "class_type": "LoadImage",
+      "inputs": {
+       "image": "K-still.png"
+      }
+     },
+     "neg": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+      }
+     },
+     "pos": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "a corgi in a raincoat, 1990s camcorder"
+      }
+     },
+     "s1": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-pos",
+       "value": [
+        "cond",
+        0
+       ]
+      }
+     },
+     "s2": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-neg",
+       "value": [
+        "cond",
+        1
+       ]
+      }
+     },
+     "s3": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-lat",
+       "value": [
+        "i2v",
+        2
+       ]
+      }
+     },
+     "t5": {
+      "class_type": "CLIPLoaderGGUF",
+      "inputs": {
+       "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+       "type": "ltxv"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     }
+    }
+   ],
+   [
+    "clip_sample",
+    {
+     "dit": {
+      "class_type": "UNETLoader",
+      "inputs": {
+       "unet_name": "ltxv-2b-0.9.8-distilled-fp8.safetensors",
+       "weight_dtype": "fp8_e4m3fn"
+      }
+     },
+     "ks": {
+      "class_type": "KSampler",
+      "inputs": {
+       "cfg": 1,
+       "denoise": 1,
+       "latent_image": [
+        "u3",
+        0
+       ],
+       "model": [
+        "dit",
+        0
+       ],
+       "negative": [
+        "u2",
+        0
+       ],
+       "positive": [
+        "u1",
+        0
+       ],
+       "sampler_name": "euler",
+       "scheduler": "simple",
+       "seed": 24,
+       "steps": 8
+      }
+     },
+     "s4": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-out",
+       "value": [
+        "ks",
+        0
+       ]
+      }
+     },
+     "u1": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-pos"
+      }
+     },
+     "u2": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-neg"
+      }
+     },
+     "u3": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-lat"
+      }
+     }
+    }
+   ],
+   [
+    "clip_decode",
+    {
+     "dec": {
+      "class_type": "VAEDecodeTiled",
+      "inputs": {
+       "overlap": 32,
+       "samples": [
+        "u4",
+        0
+       ],
+       "temporal_overlap": 4,
+       "temporal_size": 32,
+       "tile_size": 256,
+       "vae": [
+        "vk",
+        0
+       ]
+      }
+     },
+     "mk": {
+      "class_type": "CreateVideo",
+      "inputs": {
+       "fps": 24,
+       "images": [
+        "dec",
+        0
+       ]
+      }
+     },
+     "save": {
+      "class_type": "SaveVideo",
+      "inputs": {
+       "codec": "h264",
+       "filename_prefix": "videobench/K-clip",
+       "format": "mp4",
+       "video": [
+        "mk",
+        0
+       ]
+      }
+     },
+     "u4": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-out"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     },
+     "vk": {
+      "class_type": "VAEKeepLoaded",
+      "inputs": {
+       "vae": [
+        "vae",
+        0
+       ]
+      }
+     }
+    }
+   ]
+  ],
+  "fast/normal": [
+   [
+    "clip_encode",
+    {
+     "cond": {
+      "class_type": "LTXVConditioning",
+      "inputs": {
+       "frame_rate": 24,
+       "negative": [
+        "i2v",
+        1
+       ],
+       "positive": [
+        "i2v",
+        0
+       ]
+      }
+     },
+     "i2v": {
+      "class_type": "LTXVImgToVideo",
+      "inputs": {
+       "batch_size": 1,
+       "height": 480,
+       "image": [
+        "img",
+        0
+       ],
+       "length": 121,
+       "negative": [
+        "neg",
+        0
+       ],
+       "positive": [
+        "pos",
+        0
+       ],
+       "strength": 1.0,
+       "vae": [
+        "vae",
+        0
+       ],
+       "width": 640
+      }
+     },
+     "img": {
+      "class_type": "LoadImage",
+      "inputs": {
+       "image": "K-still.png"
+      }
+     },
+     "neg": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+      }
+     },
+     "pos": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "a corgi in a raincoat, 1990s camcorder"
+      }
+     },
+     "s1": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-pos",
+       "value": [
+        "cond",
+        0
+       ]
+      }
+     },
+     "s2": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-neg",
+       "value": [
+        "cond",
+        1
+       ]
+      }
+     },
+     "s3": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-lat",
+       "value": [
+        "i2v",
+        2
+       ]
+      }
+     },
+     "t5": {
+      "class_type": "CLIPLoaderGGUF",
+      "inputs": {
+       "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+       "type": "ltxv"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     }
+    }
+   ],
+   [
+    "clip_sample",
+    {
+     "dit": {
+      "class_type": "UNETLoader",
+      "inputs": {
+       "unet_name": "ltxv-2b-0.9.8-distilled-fp8.safetensors",
+       "weight_dtype": "fp8_e4m3fn"
+      }
+     },
+     "ks": {
+      "class_type": "KSampler",
+      "inputs": {
+       "cfg": 1,
+       "denoise": 1,
+       "latent_image": [
+        "u3",
+        0
+       ],
+       "model": [
+        "dit",
+        0
+       ],
+       "negative": [
+        "u2",
+        0
+       ],
+       "positive": [
+        "u1",
+        0
+       ],
+       "sampler_name": "euler",
+       "scheduler": "simple",
+       "seed": 24,
+       "steps": 8
+      }
+     },
+     "s4": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-out",
+       "value": [
+        "ks",
+        0
+       ]
+      }
+     },
+     "u1": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-pos"
+      }
+     },
+     "u2": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-neg"
+      }
+     },
+     "u3": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-lat"
+      }
+     }
+    }
+   ],
+   [
+    "clip_decode",
+    {
+     "dec": {
+      "class_type": "VAEDecodeTiled",
+      "inputs": {
+       "overlap": 64,
+       "samples": [
+        "u4",
+        0
+       ],
+       "temporal_overlap": 8,
+       "temporal_size": 64,
+       "tile_size": 512,
+       "vae": [
+        "vk",
+        0
+       ]
+      }
+     },
+     "mk": {
+      "class_type": "CreateVideo",
+      "inputs": {
+       "fps": 24,
+       "images": [
+        "dec",
+        0
+       ]
+      }
+     },
+     "save": {
+      "class_type": "SaveVideo",
+      "inputs": {
+       "codec": "h264",
+       "filename_prefix": "videobench/K-clip",
+       "format": "mp4",
+       "video": [
+        "mk",
+        0
+       ]
+      }
+     },
+     "u4": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-out"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     },
+     "vk": {
+      "class_type": "VAEKeepLoaded",
+      "inputs": {
+       "vae": [
+        "vae",
+        0
+       ]
+      }
+     }
+    }
+   ]
+  ],
+  "quality/lowmem": [
+   [
+    "clip_encode",
+    {
+     "cond": {
+      "class_type": "LTXVConditioning",
+      "inputs": {
+       "frame_rate": 24,
+       "negative": [
+        "i2v",
+        1
+       ],
+       "positive": [
+        "i2v",
+        0
+       ]
+      }
+     },
+     "i2v": {
+      "class_type": "LTXVImgToVideo",
+      "inputs": {
+       "batch_size": 1,
+       "height": 512,
+       "image": [
+        "img",
+        0
+       ],
+       "length": 121,
+       "negative": [
+        "neg",
+        0
+       ],
+       "positive": [
+        "pos",
+        0
+       ],
+       "strength": 1.0,
+       "vae": [
+        "vae",
+        0
+       ],
+       "width": 768
+      }
+     },
+     "img": {
+      "class_type": "LoadImage",
+      "inputs": {
+       "image": "K-still.png"
+      }
+     },
+     "neg": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+      }
+     },
+     "pos": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "a corgi in a raincoat, 1990s camcorder"
+      }
+     },
+     "s1": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-pos",
+       "value": [
+        "cond",
+        0
+       ]
+      }
+     },
+     "s2": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-neg",
+       "value": [
+        "cond",
+        1
+       ]
+      }
+     },
+     "s3": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-lat",
+       "value": [
+        "i2v",
+        2
+       ]
+      }
+     },
+     "t5": {
+      "class_type": "CLIPLoaderGGUF",
+      "inputs": {
+       "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+       "type": "ltxv"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     }
+    }
+   ],
+   [
+    "clip_sample",
+    {
+     "dit": {
+      "class_type": "UnetLoaderGGUF",
+      "inputs": {
+       "unet_name": "LTXV-13B-0.9.8-distilled-Q3_K_M.gguf"
+      }
+     },
+     "ks": {
+      "class_type": "KSampler",
+      "inputs": {
+       "cfg": 1,
+       "denoise": 1,
+       "latent_image": [
+        "u3",
+        0
+       ],
+       "model": [
+        "dit",
+        0
+       ],
+       "negative": [
+        "u2",
+        0
+       ],
+       "positive": [
+        "u1",
+        0
+       ],
+       "sampler_name": "euler",
+       "scheduler": "simple",
+       "seed": 24,
+       "steps": 8
+      }
+     },
+     "s4": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-out",
+       "value": [
+        "ks",
+        0
+       ]
+      }
+     },
+     "u1": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-pos"
+      }
+     },
+     "u2": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-neg"
+      }
+     },
+     "u3": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-lat"
+      }
+     }
+    }
+   ],
+   [
+    "clip_decode",
+    {
+     "dec": {
+      "class_type": "VAEDecodeTiled",
+      "inputs": {
+       "overlap": 32,
+       "samples": [
+        "u4",
+        0
+       ],
+       "temporal_overlap": 4,
+       "temporal_size": 32,
+       "tile_size": 256,
+       "vae": [
+        "vk",
+        0
+       ]
+      }
+     },
+     "mk": {
+      "class_type": "CreateVideo",
+      "inputs": {
+       "fps": 24,
+       "images": [
+        "dec",
+        0
+       ]
+      }
+     },
+     "save": {
+      "class_type": "SaveVideo",
+      "inputs": {
+       "codec": "h264",
+       "filename_prefix": "videobench/K-clip",
+       "format": "mp4",
+       "video": [
+        "mk",
+        0
+       ]
+      }
+     },
+     "u4": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-out"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     },
+     "vk": {
+      "class_type": "VAEKeepLoaded",
+      "inputs": {
+       "vae": [
+        "vae",
+        0
+       ]
+      }
+     }
+    }
+   ]
+  ],
+  "quality/normal": [
+   [
+    "clip_encode",
+    {
+     "cond": {
+      "class_type": "LTXVConditioning",
+      "inputs": {
+       "frame_rate": 24,
+       "negative": [
+        "i2v",
+        1
+       ],
+       "positive": [
+        "i2v",
+        0
+       ]
+      }
+     },
+     "i2v": {
+      "class_type": "LTXVImgToVideo",
+      "inputs": {
+       "batch_size": 1,
+       "height": 512,
+       "image": [
+        "img",
+        0
+       ],
+       "length": 121,
+       "negative": [
+        "neg",
+        0
+       ],
+       "positive": [
+        "pos",
+        0
+       ],
+       "strength": 1.0,
+       "vae": [
+        "vae",
+        0
+       ],
+       "width": 768
+      }
+     },
+     "img": {
+      "class_type": "LoadImage",
+      "inputs": {
+       "image": "K-still.png"
+      }
+     },
+     "neg": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+      }
+     },
+     "pos": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+       "clip": [
+        "t5",
+        0
+       ],
+       "text": "a corgi in a raincoat, 1990s camcorder"
+      }
+     },
+     "s1": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-pos",
+       "value": [
+        "cond",
+        0
+       ]
+      }
+     },
+     "s2": {
+      "class_type": "StashConditioning",
+      "inputs": {
+       "key": "K-neg",
+       "value": [
+        "cond",
+        1
+       ]
+      }
+     },
+     "s3": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-lat",
+       "value": [
+        "i2v",
+        2
+       ]
+      }
+     },
+     "t5": {
+      "class_type": "CLIPLoaderGGUF",
+      "inputs": {
+       "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+       "type": "ltxv"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     }
+    }
+   ],
+   [
+    "clip_sample",
+    {
+     "dit": {
+      "class_type": "UnetLoaderGGUF",
+      "inputs": {
+       "unet_name": "LTXV-13B-0.9.8-distilled-Q3_K_M.gguf"
+      }
+     },
+     "ks": {
+      "class_type": "KSampler",
+      "inputs": {
+       "cfg": 1,
+       "denoise": 1,
+       "latent_image": [
+        "u3",
+        0
+       ],
+       "model": [
+        "dit",
+        0
+       ],
+       "negative": [
+        "u2",
+        0
+       ],
+       "positive": [
+        "u1",
+        0
+       ],
+       "sampler_name": "euler",
+       "scheduler": "simple",
+       "seed": 24,
+       "steps": 8
+      }
+     },
+     "s4": {
+      "class_type": "StashLatent",
+      "inputs": {
+       "key": "K-out",
+       "value": [
+        "ks",
+        0
+       ]
+      }
+     },
+     "u1": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-pos"
+      }
+     },
+     "u2": {
+      "class_type": "UnstashConditioning",
+      "inputs": {
+       "key": "K-neg"
+      }
+     },
+     "u3": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-lat"
+      }
+     }
+    }
+   ],
+   [
+    "clip_decode",
+    {
+     "dec": {
+      "class_type": "VAEDecodeTiled",
+      "inputs": {
+       "overlap": 64,
+       "samples": [
+        "u4",
+        0
+       ],
+       "temporal_overlap": 8,
+       "temporal_size": 64,
+       "tile_size": 512,
+       "vae": [
+        "vk",
+        0
+       ]
+      }
+     },
+     "mk": {
+      "class_type": "CreateVideo",
+      "inputs": {
+       "fps": 24,
+       "images": [
+        "dec",
+        0
+       ]
+      }
+     },
+     "save": {
+      "class_type": "SaveVideo",
+      "inputs": {
+       "codec": "h264",
+       "filename_prefix": "videobench/K-clip",
+       "format": "mp4",
+       "video": [
+        "mk",
+        0
+       ]
+      }
+     },
+     "u4": {
+      "class_type": "UnstashLatent",
+      "inputs": {
+       "key": "K-out"
+      }
+     },
+     "vae": {
+      "class_type": "VAELoader",
+      "inputs": {
+       "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+      }
+     },
+     "vk": {
+      "class_type": "VAEKeepLoaded",
+      "inputs": {
+       "vae": [
+        "vae",
+        0
+       ]
+      }
+     }
+    }
+   ]
+  ]
+ },
+ "from": "videobench 1.3.0",
+ "lineup": {
+  "hunyuan-1.0/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "hunyuan_video_720_cfgdistill_fp8_e4m3fn.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "clip_l.safetensors",
+     "clip_name2": "llava_llama3_fp8_scaled.safetensors",
+     "device": "default",
+     "type": "hunyuan_video"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 7
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "width": 848
+    }
+   },
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "7",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sc",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-hunyuan-1.0",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "fg": {
+    "class_type": "FluxGuidance",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ],
+     "guidance": 6
+    }
+   },
+   "gd": {
+    "class_type": "BasicGuider",
+    "inputs": {
+     "conditioning": [
+      "fg",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ]
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "sc": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+     "denoise": 1,
+     "model": [
+      "1",
+      0
+     ],
+     "scheduler": "simple",
+     "steps": 20
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   }
+  },
+  "hunyuan-1.0/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "hunyuan_video_720_cfgdistill_fp8_e4m3fn.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "clip_l.safetensors",
+     "clip_name2": "llava_llama3_fp8_scaled.safetensors",
+     "device": "default",
+     "type": "hunyuan_video"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 7
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "width": 848
+    }
+   },
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "7",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sc",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-hunyuan-1.0",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "fg": {
+    "class_type": "FluxGuidance",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ],
+     "guidance": 6
+    }
+   },
+   "gd": {
+    "class_type": "BasicGuider",
+    "inputs": {
+     "conditioning": [
+      "fg",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ]
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "sc": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+     "denoise": 1,
+     "model": [
+      "1",
+      0
+     ],
+     "scheduler": "simple",
+     "steps": 20
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   }
+  },
+  "hunyuan-1.0/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "hunyuan_video_720_cfgdistill_fp8_e4m3fn.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "clip_l.safetensors",
+     "clip_name2": "llava_llama3_fp8_scaled.safetensors",
+     "device": "default",
+     "type": "hunyuan_video"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 7
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "7",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sc",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "fg": {
+    "class_type": "FluxGuidance",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ],
+     "guidance": 6
+    }
+   },
+   "gd": {
+    "class_type": "BasicGuider",
+    "inputs": {
+     "conditioning": [
+      "fg",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ]
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 7
+    }
+   },
+   "sc": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+     "denoise": 1,
+     "model": [
+      "1",
+      0
+     ],
+     "scheduler": "simple",
+     "steps": 20
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   }
+  },
+  "hunyuan-1.5/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "hunyuanvideo1.5_480p_t2v_fp16.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "byt5_small_glyphxl_fp16.safetensors",
+     "device": "default",
+     "type": "hunyuan_video_15"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuanvideo15_vae_fp16.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanVideo15Latent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "width": 848
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "m",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-hunyuan-1.5",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "l": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "hunyuanvideo1.5_t2v_480p_lightx2v_4step_lora_rank_32_bf16.safetensors",
+     "model": [
+      "1",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "m": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "l",
+      0
+     ],
+     "shift": 7
+    }
+   }
+  },
+  "hunyuan-1.5/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "hunyuanvideo1.5_480p_t2v_fp16.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "byt5_small_glyphxl_fp16.safetensors",
+     "device": "default",
+     "type": "hunyuan_video_15"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuanvideo15_vae_fp16.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanVideo15Latent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "width": 848
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "m",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-hunyuan-1.5",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "l": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "hunyuanvideo1.5_t2v_480p_lightx2v_4step_lora_rank_32_bf16.safetensors",
+     "model": [
+      "1",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "m": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "l",
+      0
+     ],
+     "shift": 7
+    }
+   }
+  },
+  "hunyuan-1.5/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "hunyuanvideo1.5_480p_t2v_fp16.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "byt5_small_glyphxl_fp16.safetensors",
+     "device": "default",
+     "type": "hunyuan_video_15"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuanvideo15_vae_fp16.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanVideo15Latent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "m",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "l": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "hunyuanvideo1.5_t2v_480p_lightx2v_4step_lora_rank_32_bf16.safetensors",
+     "model": [
+      "1",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "m": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "l",
+      0
+     ],
+     "shift": 7
+    }
+   }
+  },
+  "kandinsky-5-16step/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_distilled16steps_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 16
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5-16step",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-16step/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_distilled16steps_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 16
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5-16step",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-16step/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_distilled16steps_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 7,
+     "steps": 16
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-nocfg/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_nocfg_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5-nocfg",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-nocfg/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_nocfg_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5-nocfg",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-nocfg/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_nocfg_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 7,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-pro/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5pro_t2v_sft_5s.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5-pro",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-pro/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5pro_t2v_sft_5s.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5-pro",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5-pro/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5pro_t2v_sft_5s.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 7,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_sft_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_sft_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 768
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 24,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-kandinsky-5",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "kandinsky-5/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "kandinsky5lite_t2v_sft_5s.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+     "clip_name1": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "clip_name2": "clip_l.safetensors",
+     "device": "default",
+     "type": "kandinsky5"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "hunyuan_video_vae_bf16.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "Kandinsky5ImageToVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      2
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler_ancestral",
+     "scheduler": "beta",
+     "seed": 7,
+     "steps": 50
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "ltx-2.3/lowmem": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "ck",
+      2
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltx-2.3",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 121
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "LTXVAudioVAELoader",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "ck": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "ltx_2.3_22b_distilled_1.1_lora_dynamic_fro09_avg_rank_111_bf16.safetensors",
+     "model": [
+      "ck",
+      0
+     ],
+     "strength_model": 0.5
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "dit",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "te": {
+    "class_type": "LTXAVTextEncoderLoader",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors",
+     "device": "default",
+     "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   }
+  },
+  "ltx-2.3/normal": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "ck",
+      2
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltx-2.3",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 121
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "LTXVAudioVAELoader",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "ck": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "ltx_2.3_22b_distilled_1.1_lora_dynamic_fro09_avg_rank_111_bf16.safetensors",
+     "model": [
+      "ck",
+      0
+     ],
+     "strength_model": 0.5
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "dit",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "te": {
+    "class_type": "LTXAVTextEncoderLoader",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors",
+     "device": "default",
+     "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   }
+  },
+  "ltx-2.3/resized": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "ck",
+      2
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 97
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "LTXVAudioVAELoader",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "ck": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "ltx_2.3_22b_distilled_1.1_lora_dynamic_fro09_avg_rank_111_bf16.safetensors",
+     "model": [
+      "ck",
+      0
+     ],
+     "strength_model": 0.5
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "dit",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 7
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "te": {
+    "class_type": "LTXAVTextEncoderLoader",
+    "inputs": {
+     "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors",
+     "device": "default",
+     "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   }
+  },
+  "ltx-2.5/lowmem": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "vv",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltx-2.5",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 121
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "ltx-2.5-audio-vae-bf16.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "dit",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler_ancestral"
+    }
+   },
+   "te": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+     "device": "default",
+     "type": "ltxv"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   },
+   "vv": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "ltx-2.5-video-vae-bf16.safetensors"
+    }
+   }
+  },
+  "ltx-2.5/normal": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "vv",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltx-2.5",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 121
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "ltx-2.5-audio-vae-bf16.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "dit",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler_ancestral"
+    }
+   },
+   "te": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+     "device": "default",
+     "type": "ltxv"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   },
+   "vv": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "ltx-2.5-video-vae-bf16.safetensors"
+    }
+   }
+  },
+  "ltx-2.5/resized": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "vv",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 97
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "ltx-2.5-audio-vae-bf16.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "dit",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 7
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler_ancestral"
+    }
+   },
+   "te": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+     "device": "default",
+     "type": "ltxv"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "vv": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "ltx-2.5-video-vae-bf16.safetensors"
+    }
+   }
+  },
+  "ltx-2/lowmem": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "ck",
+      2
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltx-2",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 121
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "LTXVAudioVAELoader",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "ck": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors"
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "ck",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler_ancestral"
+    }
+   },
+   "te": {
+    "class_type": "LTXAVTextEncoderLoader",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors",
+     "device": "default",
+     "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   }
+  },
+  "ltx-2/normal": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "ck",
+      2
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltx-2",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 121
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "LTXVAudioVAELoader",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "ck": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors"
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "ck",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler_ancestral"
+    }
+   },
+   "te": {
+    "class_type": "LTXAVTextEncoderLoader",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors",
+     "device": "default",
+     "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   }
+  },
+  "ltx-2/resized": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "cat",
+      0
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sg",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "sep",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "ck",
+      2
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "al": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "batch_size": 1,
+     "frame_rate": 24,
+     "frames_number": 97
+    }
+   },
+   "au": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+     "audio_vae": [
+      "av",
+      0
+     ],
+     "samples": [
+      "sep",
+      1
+     ]
+    }
+   },
+   "av": {
+    "class_type": "LTXVAudioVAELoader",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors"
+    }
+   },
+   "cat": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+     "audio_latent": [
+      "al",
+      0
+     ],
+     "video_latent": [
+      "vl",
+      0
+     ]
+    }
+   },
+   "ck": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors"
+    }
+   },
+   "cond": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "neg",
+      0
+     ],
+     "positive": [
+      "pos",
+      0
+     ]
+    }
+   },
+   "gd": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "ck",
+      0
+     ],
+     "negative": [
+      "cond",
+      1
+     ],
+     "positive": [
+      "cond",
+      0
+     ]
+    }
+   },
+   "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 7
+    }
+   },
+   "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "sep": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+     "av_latent": [
+      "8",
+      0
+     ]
+    }
+   },
+   "sg": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler_ancestral"
+    }
+   },
+   "te": {
+    "class_type": "LTXAVTextEncoderLoader",
+    "inputs": {
+     "ckpt_name": "ltx-2-19b-distilled-fp8.safetensors",
+     "device": "default",
+     "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors"
+    }
+   },
+   "vl": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   }
+  },
+  "ltxv-13b/lowmem": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "LTXV-13B-0.9.8-distilled-Q3_K_M.gguf"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "ltxv"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+    }
+   },
+   "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+    }
+   },
+   "6": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   },
+   "7": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "4",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "6",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 8
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "5",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltxv-13b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "ltxv-13b/normal": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "LTXV-13B-0.9.8-distilled-Q3_K_M.gguf"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "ltxv"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+    }
+   },
+   "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+    }
+   },
+   "6": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   },
+   "7": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "4",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "6",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 8
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "5",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltxv-13b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "ltxv-13b/resized": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "LTXV-13B-0.9.8-distilled-Q3_K_M.gguf"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "ltxv"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+    }
+   },
+   "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+    }
+   },
+   "6": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "7": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "4",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "6",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 8
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "5",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "ltxv-2b/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "ltxv-2b-0.9.8-distilled-fp8.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "ltxv"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+    }
+   },
+   "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+    }
+   },
+   "6": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   },
+   "7": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "4",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "6",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 8
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "5",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltxv-2b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "ltxv-2b/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "ltxv-2b-0.9.8-distilled-fp8.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "ltxv"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+    }
+   },
+   "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+    }
+   },
+   "6": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 512,
+     "length": 121,
+     "width": 768
+    }
+   },
+   "7": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "4",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "6",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 8
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "5",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-ltxv-2b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "ltxv-2b/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "ltxv-2b-0.9.8-distilled-fp8.safetensors",
+     "weight_dtype": "fp8_e4m3fn"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "ltxv"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+    }
+   },
+   "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+    }
+   },
+   "6": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "7": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+     "frame_rate": 24,
+     "negative": [
+      "4",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "6",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 8
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "5",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "minimax-h3/lowmem": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "i2v",
+      1
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sc",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "vv",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-minimax-h3",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "au": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "va",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "gd": {
+    "class_type": "BasicGuider",
+    "inputs": {
+     "conditioning": [
+      "i2v",
+      0
+     ],
+     "model": [
+      "lo",
+      0
+     ]
+    }
+   },
+   "i2v": {
+    "class_type": "MiniMaxH3ImageToVideo",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "height": 480,
+     "length": 124,
+     "prompt": "a corgi in a raincoat, 1990s camcorder",
+     "vae": [
+      "vv",
+      0
+     ],
+     "width": 832
+    }
+   },
+   "lo": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+     "model": [
+      "dit",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "sc": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+     "denoise": 1,
+     "model": [
+      "lo",
+      0
+     ],
+     "scheduler": "simple",
+     "steps": 6
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "res_multistep"
+    }
+   },
+   "te": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+     "device": "default",
+     "type": "minimax"
+    }
+   },
+   "va": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    }
+   },
+   "vv": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    }
+   }
+  },
+  "minimax-h3/normal": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "i2v",
+      1
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sc",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "vv",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-minimax-h3",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "au": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "va",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "gd": {
+    "class_type": "BasicGuider",
+    "inputs": {
+     "conditioning": [
+      "i2v",
+      0
+     ],
+     "model": [
+      "lo",
+      0
+     ]
+    }
+   },
+   "i2v": {
+    "class_type": "MiniMaxH3ImageToVideo",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "height": 480,
+     "length": 124,
+     "prompt": "a corgi in a raincoat, 1990s camcorder",
+     "vae": [
+      "vv",
+      0
+     ],
+     "width": 832
+    }
+   },
+   "lo": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+     "model": [
+      "dit",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "sc": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+     "denoise": 1,
+     "model": [
+      "lo",
+      0
+     ],
+     "scheduler": "simple",
+     "steps": 6
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "res_multistep"
+    }
+   },
+   "te": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+     "device": "default",
+     "type": "minimax"
+    }
+   },
+   "va": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    }
+   },
+   "vv": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    }
+   }
+  },
+  "minimax-h3/resized": {
+   "8": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "gd",
+      0
+     ],
+     "latent_image": [
+      "i2v",
+      1
+     ],
+     "noise": [
+      "nz",
+      0
+     ],
+     "sampler": [
+      "ss",
+      0
+     ],
+     "sigmas": [
+      "sc",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "vv",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "audio": [
+      "au",
+      0
+     ],
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "au": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "va",
+      0
+     ]
+    }
+   },
+   "dit": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "gd": {
+    "class_type": "BasicGuider",
+    "inputs": {
+     "conditioning": [
+      "i2v",
+      0
+     ],
+     "model": [
+      "lo",
+      0
+     ]
+    }
+   },
+   "i2v": {
+    "class_type": "MiniMaxH3ImageToVideo",
+    "inputs": {
+     "clip": [
+      "te",
+      0
+     ],
+     "height": 480,
+     "length": 97,
+     "prompt": "a corgi in a raincoat, 1990s camcorder",
+     "vae": [
+      "vv",
+      0
+     ],
+     "width": 640
+    }
+   },
+   "lo": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+     "model": [
+      "dit",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "nz": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 7
+    }
+   },
+   "sc": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+     "denoise": 1,
+     "model": [
+      "lo",
+      0
+     ],
+     "scheduler": "simple",
+     "steps": 6
+    }
+   },
+   "ss": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "res_multistep"
+    }
+   },
+   "te": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+     "device": "default",
+     "type": "minimax"
+    }
+   },
+   "va": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    }
+   },
+   "vv": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    }
+   }
+  },
+  "mochi-1/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "mochi_preview_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "mochi"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "mochi_vae.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "EmptyMochiLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 151,
+     "width": 848
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 4.5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 30,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-mochi-1",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "mochi-1/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "mochi_preview_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "mochi"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "mochi_vae.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "EmptyMochiLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 151,
+     "width": 848
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 4.5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 30,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-mochi-1",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "mochi-1/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "mochi_preview_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+     "type": "mochi"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "mochi_vae.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": ""
+    }
+   },
+   "7": {
+    "class_type": "EmptyMochiLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 4.5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 30,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.1-1.3b/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.1_t2v_1.3B_fp16.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 81,
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 6,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.1-1.3b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.1-1.3b/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.1_t2v_1.3B_fp16.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 81,
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 6,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.1-1.3b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.1-1.3b/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.1_t2v_1.3B_fp16.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 6,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.1-14b/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.1_t2v_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 81,
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 6,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.1-14b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.1-14b/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.1_t2v_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 81,
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 6,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.1-14b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.1-14b/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.1_t2v_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 6,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 30
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.2-14b/lowmem": {
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 81,
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+     "add_noise": "disable",
+     "cfg": 1,
+     "end_at_step": 4,
+     "latent_image": [
+      "k1",
+      0
+     ],
+     "model": [
+      "ml",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "noise_seed": 0,
+     "positive": [
+      "5",
+      0
+     ],
+     "return_with_leftover_noise": "disable",
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "start_at_step": 2,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.2-14b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "hi": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "k1": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+     "add_noise": "enable",
+     "cfg": 1,
+     "end_at_step": 2,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "mh",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "noise_seed": 24,
+     "positive": [
+      "5",
+      0
+     ],
+     "return_with_leftover_noise": "enable",
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "start_at_step": 0,
+     "steps": 4
+    }
+   },
+   "lh": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors",
+     "model": [
+      "hi",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "ll": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors",
+     "model": [
+      "lo",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "lo": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "mh": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "lh",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "ml": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "ll",
+      0
+     ],
+     "shift": 5
+    }
+   }
+  },
+  "wan-2.2-14b/normal": {
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 81,
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+     "add_noise": "disable",
+     "cfg": 1,
+     "end_at_step": 4,
+     "latent_image": [
+      "k1",
+      0
+     ],
+     "model": [
+      "ml",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "noise_seed": 0,
+     "positive": [
+      "5",
+      0
+     ],
+     "return_with_leftover_noise": "disable",
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "start_at_step": 2,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.2-14b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "hi": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "k1": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+     "add_noise": "enable",
+     "cfg": 1,
+     "end_at_step": 2,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "mh",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "noise_seed": 24,
+     "positive": [
+      "5",
+      0
+     ],
+     "return_with_leftover_noise": "enable",
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "start_at_step": 0,
+     "steps": 4
+    }
+   },
+   "lh": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors",
+     "model": [
+      "hi",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "ll": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors",
+     "model": [
+      "lo",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "lo": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "mh": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "lh",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "ml": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "ll",
+      0
+     ],
+     "shift": 5
+    }
+   }
+  },
+  "wan-2.2-14b/resized": {
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan_2.1_vae.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "EmptyHunyuanLatentVideo",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+     "add_noise": "disable",
+     "cfg": 1,
+     "end_at_step": 4,
+     "latent_image": [
+      "k1",
+      0
+     ],
+     "model": [
+      "ml",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "noise_seed": 0,
+     "positive": [
+      "5",
+      0
+     ],
+     "return_with_leftover_noise": "disable",
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "start_at_step": 2,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 16,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   },
+   "hi": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "k1": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+     "add_noise": "enable",
+     "cfg": 1,
+     "end_at_step": 2,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "mh",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "noise_seed": 7,
+     "positive": [
+      "5",
+      0
+     ],
+     "return_with_leftover_noise": "enable",
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "start_at_step": 0,
+     "steps": 4
+    }
+   },
+   "lh": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors",
+     "model": [
+      "hi",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "ll": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors",
+     "model": [
+      "lo",
+      0
+     ],
+     "strength_model": 1.0
+    }
+   },
+   "lo": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "mh": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "lh",
+      0
+     ],
+     "shift": 5
+    }
+   },
+   "ml": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "ll",
+      0
+     ],
+     "shift": 5
+    }
+   }
+  },
+  "wan-2.2-5b-official/lowmem": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_ti2v_5B_fp16.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan2.2_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "Wan22ImageToVideoLatent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 20
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.2-5b-official",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.2-5b-official/normal": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_ti2v_5B_fp16.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan2.2_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "Wan22ImageToVideoLatent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 20
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.2-5b-official",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.2-5b-official/resized": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "wan2.2_ti2v_5B_fp16.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan2.2_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+    }
+   },
+   "7": {
+    "class_type": "Wan22ImageToVideoLatent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 5,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 20
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.2-5b/lowmem": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "Wan2_2-TI2V-5B-Turbo-Q4_K_M.gguf"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan2.2_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "Wan22ImageToVideoLatent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 32,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 4,
+     "temporal_size": 32,
+     "tile_size": 256,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.2-5b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.2-5b/normal": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "Wan2_2-TI2V-5B-Turbo-Q4_K_M.gguf"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan2.2_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "Wan22ImageToVideoLatent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 121,
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 832
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/K-wan-2.2-5b",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  },
+  "wan-2.2-5b/resized": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "Wan2_2-TI2V-5B-Turbo-Q4_K_M.gguf"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+     "type": "wan"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "wan2.2_vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 8
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "Wan22ImageToVideoLatent",
+    "inputs": {
+     "batch_size": 1,
+     "height": 480,
+     "length": 97,
+     "vae": [
+      "3",
+      0
+     ],
+     "width": 640
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "uni_pc",
+     "scheduler": "simple",
+     "seed": 7,
+     "steps": 4
+    }
+   },
+   "9": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "overlap": 64,
+     "samples": [
+      "8",
+      0
+     ],
+     "temporal_overlap": 8,
+     "temporal_size": 64,
+     "tile_size": 512,
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "90": {
+    "class_type": "CreateVideo",
+    "inputs": {
+     "fps": 24,
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "91": {
+    "class_type": "SaveVideo",
+    "inputs": {
+     "codec": "h264",
+     "filename_prefix": "videobench/R",
+     "format": "mp4",
+     "video": [
+      "90",
+      0
+     ]
+    }
+   }
+  }
+ },
+ "prompt": "a corgi in a raincoat, 1990s camcorder",
+ "split": {
+  "ltxv-13b": [
+   {
+    "2": {
+     "class_type": "CLIPLoaderGGUF",
+     "inputs": {
+      "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "type": "ltxv"
+     }
+    },
+    "3": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "clip": [
+       "2",
+       0
+      ],
+      "text": "a corgi in a raincoat, 1990s camcorder"
+     }
+    },
+    "4": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "clip": [
+       "2",
+       0
+      ],
+      "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+     }
+    },
+    "5": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+     }
+    },
+    "6": {
+     "class_type": "EmptyLTXVLatentVideo",
+     "inputs": {
+      "batch_size": 1,
+      "height": 512,
+      "length": 121,
+      "width": 768
+     }
+    },
+    "7": {
+     "class_type": "LTXVConditioning",
+     "inputs": {
+      "frame_rate": 24,
+      "negative": [
+       "4",
+       0
+      ],
+      "positive": [
+       "3",
+       0
+      ]
+     }
+    },
+    "s1": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-ltxv-13b-pos",
+      "value": [
+       "7",
+       0
+      ]
+     }
+    },
+    "s2": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-ltxv-13b-neg",
+      "value": [
+       "7",
+       1
+      ]
+     }
+    },
+    "s3": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-ltxv-13b-lat",
+      "value": [
+       "6",
+       0
+      ]
+     }
+    }
+   },
+   {
+    "1": {
+     "class_type": "UnetLoaderGGUF",
+     "inputs": {
+      "unet_name": "LTXV-13B-0.9.8-distilled-Q3_K_M.gguf"
+     }
+    },
+    "8": {
+     "class_type": "KSampler",
+     "inputs": {
+      "cfg": 1,
+      "denoise": 1,
+      "latent_image": [
+       "u3",
+       0
+      ],
+      "model": [
+       "1",
+       0
+      ],
+      "negative": [
+       "u2",
+       0
+      ],
+      "positive": [
+       "u1",
+       0
+      ],
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "seed": 24,
+      "steps": 8
+     }
+    },
+    "s4": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-ltxv-13b-out",
+      "value": [
+       "8",
+       0
+      ]
+     }
+    },
+    "u1": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-ltxv-13b-pos"
+     }
+    },
+    "u2": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-ltxv-13b-neg"
+     }
+    },
+    "u3": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-ltxv-13b-lat"
+     }
+    }
+   },
+   {
+    "5": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+     }
+    },
+    "9": {
+     "class_type": "VAEDecodeTiled",
+     "inputs": {
+      "overlap": 32,
+      "samples": [
+       "u4",
+       0
+      ],
+      "temporal_overlap": 4,
+      "temporal_size": 32,
+      "tile_size": 256,
+      "vae": [
+       "vk",
+       0
+      ]
+     }
+    },
+    "90": {
+     "class_type": "CreateVideo",
+     "inputs": {
+      "fps": 24,
+      "images": [
+       "9",
+       0
+      ]
+     }
+    },
+    "91": {
+     "class_type": "SaveVideo",
+     "inputs": {
+      "codec": "h264",
+      "filename_prefix": "videobench/K-ltxv-13b",
+      "format": "mp4",
+      "video": [
+       "90",
+       0
+      ]
+     }
+    },
+    "u4": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-ltxv-13b-out"
+     }
+    },
+    "vk": {
+     "class_type": "VAEKeepLoaded",
+     "inputs": {
+      "vae": [
+       "5",
+       0
+      ]
+     }
+    }
+   }
+  ],
+  "ltxv-2b": [
+   {
+    "2": {
+     "class_type": "CLIPLoaderGGUF",
+     "inputs": {
+      "clip_name": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "type": "ltxv"
+     }
+    },
+    "3": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "clip": [
+       "2",
+       0
+      ],
+      "text": "a corgi in a raincoat, 1990s camcorder"
+     }
+    },
+    "4": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "clip": [
+       "2",
+       0
+      ],
+      "text": "low quality, worst quality, deformed, distorted, disfigured, blurry, watermark, text, jpeg artifacts, static, motionless"
+     }
+    },
+    "5": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+     }
+    },
+    "6": {
+     "class_type": "EmptyLTXVLatentVideo",
+     "inputs": {
+      "batch_size": 1,
+      "height": 512,
+      "length": 121,
+      "width": 768
+     }
+    },
+    "7": {
+     "class_type": "LTXVConditioning",
+     "inputs": {
+      "frame_rate": 24,
+      "negative": [
+       "4",
+       0
+      ],
+      "positive": [
+       "3",
+       0
+      ]
+     }
+    },
+    "s1": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-ltxv-2b-pos",
+      "value": [
+       "7",
+       0
+      ]
+     }
+    },
+    "s2": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-ltxv-2b-neg",
+      "value": [
+       "7",
+       1
+      ]
+     }
+    },
+    "s3": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-ltxv-2b-lat",
+      "value": [
+       "6",
+       0
+      ]
+     }
+    }
+   },
+   {
+    "1": {
+     "class_type": "UNETLoader",
+     "inputs": {
+      "unet_name": "ltxv-2b-0.9.8-distilled-fp8.safetensors",
+      "weight_dtype": "fp8_e4m3fn"
+     }
+    },
+    "8": {
+     "class_type": "KSampler",
+     "inputs": {
+      "cfg": 1,
+      "denoise": 1,
+      "latent_image": [
+       "u3",
+       0
+      ],
+      "model": [
+       "1",
+       0
+      ],
+      "negative": [
+       "u2",
+       0
+      ],
+      "positive": [
+       "u1",
+       0
+      ],
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "seed": 24,
+      "steps": 8
+     }
+    },
+    "s4": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-ltxv-2b-out",
+      "value": [
+       "8",
+       0
+      ]
+     }
+    },
+    "u1": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-ltxv-2b-pos"
+     }
+    },
+    "u2": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-ltxv-2b-neg"
+     }
+    },
+    "u3": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-ltxv-2b-lat"
+     }
+    }
+   },
+   {
+    "5": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "LTXV-13B-0.9.8-distilled-VAE.safetensors"
+     }
+    },
+    "9": {
+     "class_type": "VAEDecodeTiled",
+     "inputs": {
+      "overlap": 32,
+      "samples": [
+       "u4",
+       0
+      ],
+      "temporal_overlap": 4,
+      "temporal_size": 32,
+      "tile_size": 256,
+      "vae": [
+       "vk",
+       0
+      ]
+     }
+    },
+    "90": {
+     "class_type": "CreateVideo",
+     "inputs": {
+      "fps": 24,
+      "images": [
+       "9",
+       0
+      ]
+     }
+    },
+    "91": {
+     "class_type": "SaveVideo",
+     "inputs": {
+      "codec": "h264",
+      "filename_prefix": "videobench/K-ltxv-2b",
+      "format": "mp4",
+      "video": [
+       "90",
+       0
+      ]
+     }
+    },
+    "u4": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-ltxv-2b-out"
+     }
+    },
+    "vk": {
+     "class_type": "VAEKeepLoaded",
+     "inputs": {
+      "vae": [
+       "5",
+       0
+      ]
+     }
+    }
+   }
+  ],
+  "wan-2.1-1.3b": [
+   {
+    "2": {
+     "class_type": "CLIPLoaderGGUF",
+     "inputs": {
+      "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+      "type": "wan"
+     }
+    },
+    "3": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+     }
+    },
+    "5": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "clip": [
+       "2",
+       0
+      ],
+      "text": "a corgi in a raincoat, 1990s camcorder"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "clip": [
+       "2",
+       0
+      ],
+      "text": "\u8272\u8c03\u8273\u4e3d\uff0c\u8fc7\u66dd\uff0c\u9759\u6001\uff0c\u7ec6\u8282\u6a21\u7cca\u4e0d\u6e05\uff0c\u5b57\u5e55\uff0c\u98ce\u683c\uff0c\u4f5c\u54c1\uff0c\u753b\u4f5c\uff0c\u753b\u9762\uff0c\u9759\u6b62\uff0c\u6574\u4f53\u53d1\u7070\uff0c\u6700\u5dee\u8d28\u91cf\uff0c\u4f4e\u8d28\u91cf\uff0cJPEG\u538b\u7f29\u6b8b\u7559\uff0c\u4e11\u964b\u7684\uff0c\u6b8b\u7f3a\u7684\uff0c\u591a\u4f59\u7684\u624b\u6307\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u624b\u90e8\uff0c\u753b\u5f97\u4e0d\u597d\u7684\u8138\u90e8\uff0c\u7578\u5f62\u7684\uff0c\u6bc1\u5bb9\u7684\uff0c\u5f62\u6001\u7578\u5f62\u7684\u80a2\u4f53\uff0c\u624b\u6307\u878d\u5408\uff0c\u9759\u6b62\u4e0d\u52a8\u7684\u753b\u9762\uff0c\u6742\u4e71\u7684\u80cc\u666f\uff0c\u4e09\u6761\u817f\uff0c\u80cc\u666f\u4eba\u5f88\u591a\uff0c\u5012\u7740\u8d70"
+     }
+    },
+    "7": {
+     "class_type": "EmptyHunyuanLatentVideo",
+     "inputs": {
+      "batch_size": 1,
+      "height": 480,
+      "length": 81,
+      "width": 832
+     }
+    },
+    "s1": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-pos",
+      "value": [
+       "5",
+       0
+      ]
+     }
+    },
+    "s2": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-neg",
+      "value": [
+       "6",
+       0
+      ]
+     }
+    },
+    "s3": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-lat",
+      "value": [
+       "7",
+       0
+      ]
+     }
+    }
+   },
+   {
+    "1": {
+     "class_type": "UNETLoader",
+     "inputs": {
+      "unet_name": "wan2.1_t2v_1.3B_fp16.safetensors",
+      "weight_dtype": "default"
+     }
+    },
+    "4": {
+     "class_type": "ModelSamplingSD3",
+     "inputs": {
+      "model": [
+       "1",
+       0
+      ],
+      "shift": 8
+     }
+    },
+    "8": {
+     "class_type": "KSampler",
+     "inputs": {
+      "cfg": 6,
+      "denoise": 1,
+      "latent_image": [
+       "u3",
+       0
+      ],
+      "model": [
+       "4",
+       0
+      ],
+      "negative": [
+       "u2",
+       0
+      ],
+      "positive": [
+       "u1",
+       0
+      ],
+      "sampler_name": "uni_pc",
+      "scheduler": "simple",
+      "seed": 24,
+      "steps": 30
+     }
+    },
+    "s4": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-out",
+      "value": [
+       "8",
+       0
+      ]
+     }
+    },
+    "u1": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-pos"
+     }
+    },
+    "u2": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-neg"
+     }
+    },
+    "u3": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-lat"
+     }
+    }
+   },
+   {
+    "3": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+     }
+    },
+    "9": {
+     "class_type": "VAEDecodeTiled",
+     "inputs": {
+      "overlap": 32,
+      "samples": [
+       "u4",
+       0
+      ],
+      "temporal_overlap": 4,
+      "temporal_size": 32,
+      "tile_size": 256,
+      "vae": [
+       "vk",
+       0
+      ]
+     }
+    },
+    "90": {
+     "class_type": "CreateVideo",
+     "inputs": {
+      "fps": 16,
+      "images": [
+       "9",
+       0
+      ]
+     }
+    },
+    "91": {
+     "class_type": "SaveVideo",
+     "inputs": {
+      "codec": "h264",
+      "filename_prefix": "videobench/K-wan-2.1-1.3b",
+      "format": "mp4",
+      "video": [
+       "90",
+       0
+      ]
+     }
+    },
+    "u4": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-wan-2.1-1.3b-out"
+     }
+    },
+    "vk": {
+     "class_type": "VAEKeepLoaded",
+     "inputs": {
+      "vae": [
+       "3",
+       0
+      ]
+     }
+    }
+   }
+  ],
+  "wan-2.2-5b": [
+   {
+    "2": {
+     "class_type": "CLIPLoaderGGUF",
+     "inputs": {
+      "clip_name": "umt5-xxl-encoder-Q4_K_M.gguf",
+      "type": "wan"
+     }
+    },
+    "3": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "wan2.2_vae.safetensors"
+     }
+    },
+    "5": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "clip": [
+       "2",
+       0
+      ],
+      "text": "a corgi in a raincoat, 1990s camcorder"
+     }
+    },
+    "6": {
+     "class_type": "ConditioningZeroOut",
+     "inputs": {
+      "conditioning": [
+       "5",
+       0
+      ]
+     }
+    },
+    "7": {
+     "class_type": "Wan22ImageToVideoLatent",
+     "inputs": {
+      "batch_size": 1,
+      "height": 480,
+      "length": 121,
+      "vae": [
+       "3",
+       0
+      ],
+      "width": 832
+     }
+    },
+    "s1": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-wan-2.2-5b-pos",
+      "value": [
+       "5",
+       0
+      ]
+     }
+    },
+    "s2": {
+     "class_type": "StashConditioning",
+     "inputs": {
+      "key": "K-wan-2.2-5b-neg",
+      "value": [
+       "6",
+       0
+      ]
+     }
+    },
+    "s3": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-wan-2.2-5b-lat",
+      "value": [
+       "7",
+       0
+      ]
+     }
+    }
+   },
+   {
+    "1": {
+     "class_type": "UnetLoaderGGUF",
+     "inputs": {
+      "unet_name": "Wan2_2-TI2V-5B-Turbo-Q4_K_M.gguf"
+     }
+    },
+    "4": {
+     "class_type": "ModelSamplingSD3",
+     "inputs": {
+      "model": [
+       "1",
+       0
+      ],
+      "shift": 8
+     }
+    },
+    "8": {
+     "class_type": "KSampler",
+     "inputs": {
+      "cfg": 1,
+      "denoise": 1,
+      "latent_image": [
+       "u3",
+       0
+      ],
+      "model": [
+       "4",
+       0
+      ],
+      "negative": [
+       "u2",
+       0
+      ],
+      "positive": [
+       "u1",
+       0
+      ],
+      "sampler_name": "uni_pc",
+      "scheduler": "simple",
+      "seed": 24,
+      "steps": 4
+     }
+    },
+    "s4": {
+     "class_type": "StashLatent",
+     "inputs": {
+      "key": "K-wan-2.2-5b-out",
+      "value": [
+       "8",
+       0
+      ]
+     }
+    },
+    "u1": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-wan-2.2-5b-pos"
+     }
+    },
+    "u2": {
+     "class_type": "UnstashConditioning",
+     "inputs": {
+      "key": "K-wan-2.2-5b-neg"
+     }
+    },
+    "u3": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-wan-2.2-5b-lat"
+     }
+    }
+   },
+   {
+    "3": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "wan2.2_vae.safetensors"
+     }
+    },
+    "9": {
+     "class_type": "VAEDecodeTiled",
+     "inputs": {
+      "overlap": 32,
+      "samples": [
+       "u4",
+       0
+      ],
+      "temporal_overlap": 4,
+      "temporal_size": 32,
+      "tile_size": 256,
+      "vae": [
+       "vk",
+       0
+      ]
+     }
+    },
+    "90": {
+     "class_type": "CreateVideo",
+     "inputs": {
+      "fps": 24,
+      "images": [
+       "9",
+       0
+      ]
+     }
+    },
+    "91": {
+     "class_type": "SaveVideo",
+     "inputs": {
+      "codec": "h264",
+      "filename_prefix": "videobench/K-wan-2.2-5b",
+      "format": "mp4",
+      "video": [
+       "90",
+       0
+      ]
+     }
+    },
+    "u4": {
+     "class_type": "UnstashLatent",
+     "inputs": {
+      "key": "K-wan-2.2-5b-out"
+     }
+    },
+    "vk": {
+     "class_type": "VAEKeepLoaded",
+     "inputs": {
+      "vae": [
+       "3",
+       0
+      ]
+     }
+    }
+   }
+  ]
+ },
+ "still": {
+  "klein": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "flux-2-klein-4b-Q5_K_M.gguf"
+    }
+   },
+   "10": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 24
+    }
+   },
+   "11": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "guider": [
+      "6",
+      0
+     ],
+     "latent_image": [
+      "9",
+      0
+     ],
+     "noise": [
+      "10",
+      0
+     ],
+     "sampler": [
+      "7",
+      0
+     ],
+     "sigmas": [
+      "8",
+      0
+     ]
+    }
+   },
+   "12": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "11",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "filename_prefix": "videobench/K-still",
+     "images": [
+      "12",
+      0
+     ]
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "Qwen3-4B-Q5_K_M.gguf",
+     "type": "flux2"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "flux2-vae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "5": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "4",
+      0
+     ]
+    }
+   },
+   "6": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "cfg": 1,
+     "model": [
+      "1",
+      0
+     ],
+     "negative": [
+      "5",
+      0
+     ],
+     "positive": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "8": {
+    "class_type": "Flux2Scheduler",
+    "inputs": {
+     "height": 768,
+     "steps": 4,
+     "width": 1024
+    }
+   },
+   "9": {
+    "class_type": "EmptyFlux2LatentImage",
+    "inputs": {
+     "batch_size": 1,
+     "height": 768,
+     "width": 1024
+    }
+   }
+  },
+  "zimage": {
+   "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+     "unet_name": "z-image-turbo-Q4_K_M.gguf"
+    }
+   },
+   "10": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "filename_prefix": "videobench/K-still",
+     "images": [
+      "9",
+      0
+     ]
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+     "clip_name": "Qwen3-4B-Q5_K_M.gguf",
+     "type": "lumina2"
+    }
+   },
+   "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "ae.safetensors"
+    }
+   },
+   "4": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "shift": 3
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "text": "a corgi in a raincoat, 1990s camcorder"
+    }
+   },
+   "6": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+     "conditioning": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+     "batch_size": 1,
+     "height": 768,
+     "width": 1024
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "cfg": 1,
+     "denoise": 1,
+     "latent_image": [
+      "7",
+      0
+     ],
+     "model": [
+      "4",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "sampler_name": "res_multistep",
+     "scheduler": "simple",
+     "seed": 24,
+     "steps": 8
+    }
+   },
+   "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "3",
+      0
+     ]
+    }
+   }
+  }
+ }
+}
