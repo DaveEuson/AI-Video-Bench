@@ -46,7 +46,7 @@ import uuid
 import zipfile
 from pathlib import Path
 
-VERSION = "1.4.0"
+VERSION = "1.4.1"
 AUTHOR = "Dave Euson"
 HOME = "github.com/DaveEuson/AI-Video-Bench"
 COMFY_REPO = ("https://github.com/comfyanonymous/ComfyUI", "e5a38e3f7b91619ff295ffbbeddff35d8e381677")
@@ -2364,6 +2364,11 @@ def check_read(script, heard, ignore=(), min_overlap=0.9, slack=3):
     (`ignore`) are left out, since speech-to-text spells them its own way."""
     ign = {w for x in ignore for w in _words(x)}
     drop = lambda w: w.isdigit() or w in NUMBER_WORDS or w in ign
+    # A word the script hyphenates ("Ca-ta-pult", "spring-loaded") is one word to the ear: its pieces
+    # count as spoken when the whole word was heard. The pair joins below rejoin two pieces, never
+    # three ("Ca-ta-pult Lunch-box Bud-dy!" scored a faithful read 88%). A chant that was never sung
+    # still fails: nothing whole was heard to join its pieces to.
+    groups = [_words(g) for g in re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)+", str(script or "").lower())]
     want, got = _words(script), _words(heard)
     if not want:
         return {"ok": True, "overlap": 1.0}
@@ -2380,7 +2385,7 @@ def check_read(script, heard, ignore=(), min_overlap=0.9, slack=3):
     # Every heard word, the ignored name included: with it filtered out, a name the script
     # splits ("Sprink-ler") could never join back up.
     got_set = set(got) | {got[i] + got[i + 1] for i in range(len(got) - 1)}  # "sunday fest" = "sundayfest"
-    joined = set()
+    joined = {w for p in groups if "".join(p) in got_set for w in p}
     for i in range(len(want) - 1):  # and the reverse: "up stairs" in the script, "upstairs" heard
         if want[i] + want[i + 1] in got_set:
             joined |= {want[i], want[i + 1]}

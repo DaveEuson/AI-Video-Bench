@@ -421,6 +421,19 @@ class CheckRead(unittest.TestCase):
         self.assertFalse(vb.check_read("A short line here", "a short line here and then five more words")["ok"])
         self.assertFalse(vb.check_read("one two quick brown fox jumps over lazy dogs", "quick fox")["ok"])
 
+    def test_a_word_split_in_three_joins_back_up_when_the_whole_word_is_heard(self):
+        # "Ca-ta-pult Lunch-box Bud-dy!": the pair joins rejoined lunch+box and bud+dy but never
+        # ca+ta+pult, so a faithful read scored 88% and the job failed.
+        script = ("CATAPULT LUNCHBOX BUDDY!\nCa-ta-pult Lunch-box Bud-dy!\nLaunch your sandwich over the moon!\n"
+                  "Collect Soup Slinger and Juice Jumper! Sold separately. Batteries not included.")
+        heard = ("Catapult Lunchbox Buddy! Catapult Lunchbox Buddy! Launch your sandwich over the moon! "
+                 "Collect Soup Slinger and Juice Jumper! Sold separately. Batteries not included.")
+        r = vb.check_read(script, heard, ["Catapult Lunchbox Buddy"])
+        self.assertEqual((r["ok"], r["overlap"]), (True, 1.0))
+        self.assertTrue(vb.check_read("A spring-loaded one-of-a-kind toy", "a springloaded oneofakind toy")["ok"])
+        self.assertFalse(vb.check_read("Ca-ta-pult! Soak the sky!", "Soak the sky!", ["Catapult"])["ok"],
+                         "a chant that was never sung must still fail")
+
 
 class Small(unittest.TestCase):
     def test_frames_for(self):
