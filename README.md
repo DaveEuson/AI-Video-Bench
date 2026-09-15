@@ -14,6 +14,12 @@ clip, the time each stage took, and a gallery page to compare runs.
 *One prompt (a 1990s infomercial for an apologetic stapler), twelve models, one RTX 4070.
 Fastest first, with each model's time for the whole clip.*
 
+**These are one machine's numbers: mine, a mid-range 12 GB RTX 4070.** Five of these twelve
+models are too big for 12 GB of VRAM, so they ran partly from system RAM, which is slower.
+videobench sizes itself to whatever it runs on: on a 24 GB card its menu lists every model in
+the lineup as fitting in VRAM, and on a smaller one it tells you what fits and what won't.
+[Share your result](#share-your-result) to show what your card can do.
+
 ```
 still (Z-Image-Turbo)  ->  encode (T5 + VAE)  ->  sample (LTX-Video)  ->  decode (VAE)  ->  mp4
 ```
@@ -29,9 +35,11 @@ It does three things:
 
 ## Run it
 
-You need Python 3.10+ and git; without git, videobench downloads GitHub zips instead. An
-NVIDIA GPU with 8 GB+ works on Windows or Linux. AMD (ROCm) works on Linux, and so does
-Apple Silicon.
+You need Python 3.10+ and git; without git, videobench downloads GitHub zips instead.
+It's built for any GPU PyTorch runs on: NVIDIA with 8 GB+ on Windows or Linux, AMD (ROCm) on
+Linux, and Apple Silicon. **This release has only been tested on an RTX 4070 (12 GB) on
+Windows.** If you run it on anything else, [share your result](#share-your-result), including
+anything that broke.
 
 Get this repository (`git clone`, or **Code > Download ZIP**), then:
 
@@ -64,6 +72,7 @@ python videobench.py --models ltxv-2b,wan-2.2-5b   # run these on the same promp
 python videobench.py --models fits             # everything that fits in VRAM ('all': everything that runs)
 python videobench.py --update-models           # fetch the latest model list
 python videobench.py --prompt "a cat surfing a wave at sunset"   # your own video
+python videobench.py --models fits --size 1024x576 --secs 10     # bigger frames, longer clips: for a big card
 python videobench.py --out D:\Videos           # save the clip there too, named from the prompt
 python videobench.py --profile quality         # the benchmark with LTX-Video 13B at 768x512
 python videobench.py --list                    # the benchmark's plan and downloads; changes nothing
